@@ -29,12 +29,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
+import me.timoglor.killScore.KillScore;
+
 /**
  * @author Florian Stober
  */
 public class FreeBungeeChatBukkit extends JavaPlugin implements Listener {
 
     VaultHook vaultHook = null;
+    Plugin killScore = null;
 
     @Override
     public void onEnable() {
@@ -72,6 +75,10 @@ public class FreeBungeeChatBukkit extends JavaPlugin implements Listener {
         if (vault != null) {
             getLogger().info("hooked Vault");
             vaultHook = new VaultHook(this);
+        }
+        if (killScore != null) {
+        	killScore = getServer().getPluginManager().getPlugin("KillScore");
+            getLogger().info("Found KillScore.");
         }
     }
 
@@ -116,6 +123,11 @@ public class FreeBungeeChatBukkit extends JavaPlugin implements Listener {
         }
         if (text.contains("%" + prefix + "level%")) {
             text = text.replace("%" + prefix + "level%", wrapVariable(Integer.toString(player.getLevel()), allowBBCode));
+        }
+        if (killScore != null && text.contains("%" + prefix + "killScorePrefix%")) {
+        	String strScore = String.valueOf(KillScore.getChatScore(player.getUniqueId().toString()));
+            text = text.replace("%" + prefix + "killScorePrefix%", wrapVariable(KillScore.prefix , allowBBCode));
+        	text = text.replace("%score%", wrapVariable(strScore , allowBBCode));
         }
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         DataOutputStream outputStream1 = new DataOutputStream(outputStream);
