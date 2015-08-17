@@ -76,8 +76,8 @@ public class FreeBungeeChatBukkit extends JavaPlugin implements Listener {
             getLogger().info("hooked Vault");
             vaultHook = new VaultHook(this);
         }
+        killScore = getServer().getPluginManager().getPlugin("KillScore");
         if (killScore != null) {
-        	killScore = getServer().getPluginManager().getPlugin("KillScore");
             getLogger().info("Found KillScore.");
         }
     }
