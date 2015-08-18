@@ -28,6 +28,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.logging.Level;
 
 import me.timoglor.killScore.KillScore;
 
@@ -54,16 +56,56 @@ public class FreeBungeeChatBukkit extends JavaPlugin implements Listener {
                         DataInputStream in = new DataInputStream(
                                 new ByteArrayInputStream(bytes));
 
-                        String subchannel = in.readUTF();
+                        String subchannel = null;
+						try {
+							subchannel = in.readUTF();
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
                         if (subchannel.equalsIgnoreCase(Constants.subchannel_chatMsg)) {
-                            String text = in.readUTF();
-                            String prefix = in.readUTF();
-                            int id = in.readInt();
-                            boolean allowBBCode = in.readBoolean();
-                            processChatMessage(player, text, prefix, id, allowBBCode);
+                            String text = null;
+							try {
+								text = in.readUTF();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+                            String prefix = null;
+							try {
+								prefix = in.readUTF();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+                            int id = 0;
+							try {
+								id = in.readInt();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+                            boolean allowBBCode = false;
+							try {
+								allowBBCode = in.readBoolean();
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+                            try {
+								processChatMessage(player, text, prefix, id, allowBBCode);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
                         }
                         if (subchannel.equalsIgnoreCase(Constants.subchannel_playSound)) {
-                            player.playSound(player.getLocation(), Sound.valueOf(in.readUTF()), 5, 1);
+                            try {
+								player.playSound(player.getLocation(), Sound.valueOf(in.readUTF()), 5, 1);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
                         }
 
                     }
@@ -83,7 +125,7 @@ public class FreeBungeeChatBukkit extends JavaPlugin implements Listener {
     }
 
     @SneakyThrows
-    private void processChatMessage(Player player, String text, String prefix, int id, boolean allowBBCode) {
+    private void processChatMessage(Player player, String text, String prefix, int id, boolean allowBBCode) throws IOException {
         if (vaultHook != null) {
             vaultHook.refresh();
         }
@@ -125,10 +167,13 @@ public class FreeBungeeChatBukkit extends JavaPlugin implements Listener {
             text = text.replace("%" + prefix + "level%", wrapVariable(Integer.toString(player.getLevel()), allowBBCode));
         }
         if (killScore != null && text.contains("%" + prefix + "killScorePrefix%")) {
-        	String strScore = String.valueOf(KillScore.getChatScore(player.getUniqueId().toString()));
-            text = text.replace("%" + prefix + "killScorePrefix%", wrapVariable(KillScore.prefix , allowBBCode));
-        	text = text.replace("%score%", wrapVariable(strScore , allowBBCode));
+        	String uuid = player.getUniqueId().toString();
+            text = text.replace("%" + prefix + "killScorePrefix%", wrapVariable(KillScore.getPrefix(uuid) , allowBBCode));
         }
+        if (killScore == null && text.contains("%" + prefix + "killScorePrefix%")) {
+            text = text.replace("%" + prefix + "killScorePrefix%", wrapVariable("" , allowBBCode));
+        }
+        	
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         DataOutputStream outputStream1 = new DataOutputStream(outputStream);
         outputStream1.writeUTF(Constants.subchannel_chatMsg);

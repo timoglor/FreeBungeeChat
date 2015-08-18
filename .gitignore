@@ -43,3 +43,4 @@ manifest.mf
 
 # delombok
 */src/main/lombok
+startup.bat
